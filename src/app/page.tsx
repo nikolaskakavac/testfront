@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { cookies } from "next/headers";
 
 import Topbar from "@/components/layout/topbar";
 import BottomNav from "@/components/layout/bottom-nav";
@@ -122,8 +123,22 @@ function normalizePosts(posts: Post[]): Post[] {
 }
 async function loadPosts(): Promise<Post[]> {
   try {
+    const cookieStore = await cookies();
+    const sessionToken = cookieStore.get("session_token")?.value;
+    const csrfToken = cookieStore.get("csrf_token")?.value;
+    const refreshToken = cookieStore.get("refresh_token")?.value;
+
     const response = await fetch(`${BACKEND_API_BASE_URL}${BACKEND_POSTS_PATH}`, {
       cache: "no-store",
+      headers: {
+        Cookie: [
+          sessionToken ? `session_token=${sessionToken}` : "",
+          csrfToken ? `csrf_token=${csrfToken}` : "",
+          refreshToken ? `refresh_token=${refreshToken}` : "",
+        ]
+          .filter(Boolean)
+          .join("; "),
+      },
     });
 
     if (!response.ok) {

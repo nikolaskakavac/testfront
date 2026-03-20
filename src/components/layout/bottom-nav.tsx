@@ -1,10 +1,14 @@
 "use client";
 
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+
 type NavItem = {
   label: string;
   icon: React.ReactNode;
-  active?: boolean;
+  href: string;
   accent?: boolean;
+  activeWhen?: string[];
 };
 
 function HomeIcon() {
@@ -55,32 +59,39 @@ function UserIcon() {
 }
 
 const items: NavItem[] = [
-  { label: "Home", icon: <HomeIcon />, active: true },
-  { label: "Search", icon: <SearchIcon /> },
-  { label: "Create", icon: <PlusIcon />, accent: true },
-  { label: "Favorites", icon: <HeartIcon /> },
-  { label: "My profile", icon: <UserIcon /> },
+  { label: "Home", icon: <HomeIcon />, href: "/", activeWhen: ["/"] },
+  { label: "Search", icon: <SearchIcon />, href: "/" },
+  { label: "Create", icon: <PlusIcon />, href: "/?compose=1#create-post", accent: true, activeWhen: ["/"] },
+  { label: "Favorites", icon: <HeartIcon />, href: "/likes" },
+  { label: "Profile", icon: <UserIcon />, href: "/profile", activeWhen: ["/profile"] },
 ];
 
 export default function BottomNav() {
+  const pathname = usePathname();
+
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-[color:var(--line)] bg-[var(--header-bg)] px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 backdrop-blur-xl md:hidden">
       <div className="mx-auto grid max-w-md grid-cols-5 gap-2 rounded-[28px] border border-[color:var(--line)] bg-[var(--surface)] p-2 shadow-[var(--shadow-card)]">
-        {items.map((item) => (
-          <button
-            key={item.label}
-            className={`flex flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-[11px] font-medium transition ${
-              item.accent
-                ? "brand-gradient text-[color:var(--button-text)] shadow-[0_10px_25px_rgba(164,63,26,0.3)]"
-                : item.active
-                  ? "bg-[var(--subtle-bg-2)] text-[color:var(--text-strong)]"
-                  : "text-[color:var(--muted)] hover:bg-[var(--subtle-bg-2)] hover:text-[color:var(--text-strong)]"
-            }`}
-          >
-            <span>{item.icon}</span>
-            <span>{item.label}</span>
-          </button>
-        ))}
+        {items.map((item) => {
+          const isActive = item.activeWhen?.includes(pathname) ?? false;
+
+          return (
+            <Link
+              key={item.label}
+              href={item.href}
+              className={`flex flex-col items-center justify-center gap-1 rounded-2xl px-2 py-2 text-[11px] font-medium transition ${
+                item.accent
+                  ? "brand-gradient text-[color:var(--button-text)] shadow-[0_10px_25px_rgba(164,63,26,0.3)]"
+                  : isActive
+                    ? "bg-[var(--subtle-bg-2)] text-[color:var(--text-strong)]"
+                    : "text-[color:var(--muted)] hover:bg-[var(--subtle-bg-2)] hover:text-[color:var(--text-strong)]"
+              }`}
+            >
+              <span>{item.icon}</span>
+              <span>{item.label}</span>
+            </Link>
+          );
+        })}
       </div>
     </nav>
   );

@@ -13,7 +13,10 @@ type PostModalProps = {
 
 export default function PostModal({ post, isOpen, onClose }: PostModalProps) {
   const [currentImage, setCurrentImage] = useState(0);
-  const [loved, setLoved] = useState(false);
+  const [loved, setLoved] = useState(Boolean(post.isFavorited));
+  const [favoritesCount, setFavoritesCount] = useState<number>(post.favorites ?? 0);
+  const [isSavingFavorite, setIsSavingFavorite] = useState(false);
+  const [favoriteMessage, setFavoriteMessage] = useState<string | null>(null);
 
   const images = useMemo(() => {
     if (post.images?.length) {
@@ -21,6 +24,12 @@ export default function PostModal({ post, isOpen, onClose }: PostModalProps) {
     }
     return [post.imageUrl];
   }, [post.imageUrl, post.images]);
+
+  useEffect(() => {
+    setLoved(Boolean(post.isFavorited));
+    setFavoritesCount(post.favorites ?? 0);
+    setFavoriteMessage(null);
+  }, [post.favorites, post.id, post.isFavorited]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -50,6 +59,40 @@ export default function PostModal({ post, isOpen, onClose }: PostModalProps) {
 
   const hasMultiple = images.length > 1;
   const subject = post.title.slice(0, 60);
+
+  const toggleFavorite = async () => {
+    if (isSavingFavorite) {
+      return;
+    }
+
+    setIsSavingFavorite(true);
+
+    try {
+      const response = await fetch(`/api/posts/${post.id}/favorite`, {
+        method: loved ? "DELETE" : "POST",
+      });
+
+      const data = (await response.json().catch(() => ({}))) as {
+        message?: string;
+        favorites?: number;
+        favorited?: boolean;
+      };
+
+      if (!response.ok) {
+        throw new Error(data.message || "Favorite request failed.");
+      }
+
+      setLoved(Boolean(data.favorited));
+      setFavoritesCount(typeof data.favorites === "number" ? data.favorites : favoritesCount);
+      setFavoriteMessage(data.favorited ? "Saved to favorites" : "Removed from favorites");
+    } catch {
+      setFavoriteMessage("Favorites trenutno ne rade. Restartuj backend.");
+      return;
+    } finally {
+      setIsSavingFavorite(false);
+      window.setTimeout(() => setFavoriteMessage(null), 2400);
+    }
+  };
 
   return (
     <div
@@ -120,7 +163,8 @@ export default function PostModal({ post, isOpen, onClose }: PostModalProps) {
         <button
           type="button"
           aria-label="Love post"
-          onClick={() => setLoved((prev) => !prev)}
+          onClick={toggleFavorite}
+          disabled={isSavingFavorite}
           className={`absolute bottom-4 right-4 rounded-2xl bg-black/35 p-2.5 ring-1 ring-white/15 backdrop-blur-sm transition duration-200 ${
             loved ? "text-red-500" : "text-white/65 hover:scale-[1.03] hover:text-red-500"
           }`}
@@ -129,6 +173,16 @@ export default function PostModal({ post, isOpen, onClose }: PostModalProps) {
             <path d="M20.8 6.6c-1.1-2-3.6-3.1-5.8-2.1-1.1.5-2 1.4-2.5 2.3-.5-.9-1.4-1.8-2.5-2.3-2.2-1-4.7.1-5.8 2.1-1.2 2.1-.6 4.8 1.2 6.3L12 21l6.6-8.1c1.8-1.5 2.4-4.2 1.2-6.3z" />
           </svg>
         </button>
+
+        <div className="absolute right-4 top-16 rounded-full bg-black/35 px-3 py-1 text-[11px] font-semibold tracking-[0.14em] text-white/80 ring-1 ring-white/15 backdrop-blur-sm">
+          {favoritesCount} favorites
+        </div>
+
+        {favoriteMessage ? (
+          <div className="absolute left-4 top-16 max-w-[60%] rounded-full bg-black/45 px-3 py-1 text-[11px] font-semibold tracking-[0.04em] text-white/85 ring-1 ring-white/15 backdrop-blur-sm">
+            {favoriteMessage}
+          </div>
+        ) : null}
 
         <div className="absolute bottom-4 left-4 max-w-[80%] text-white">
           <p className="line-clamp-2 max-w-[30ch] break-words text-xl font-bold leading-6 text-white">{subject}</p>

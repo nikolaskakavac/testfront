@@ -1,7 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 
 type CreatePostPayload = {
   title: string;
@@ -19,6 +19,8 @@ const initialState: CreatePostPayload = {
 
 export default function CreatePostPanel() {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -26,6 +28,31 @@ export default function CreatePostPanel() {
   const [message, setMessage] = useState("");
   const [files, setFiles] = useState<FileList | null>(null);
   const [form, setForm] = useState<CreatePostPayload>(initialState);
+
+  useEffect(() => {
+    if (searchParams.get("compose") === "1") {
+      setIsExpanded(true);
+    }
+  }, [searchParams]);
+
+  function toggleExpanded(nextValue: boolean) {
+    setIsExpanded(nextValue);
+
+    if (pathname !== "/") {
+      return;
+    }
+
+    const params = new URLSearchParams(searchParams.toString());
+    if (nextValue) {
+      params.set("compose", "1");
+      router.replace(`/?${params.toString()}#create-post`, { scroll: false });
+      return;
+    }
+
+    params.delete("compose");
+    const nextQuery = params.toString();
+    router.replace(nextQuery ? `/?${nextQuery}` : "/", { scroll: false });
+  }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -62,7 +89,7 @@ export default function CreatePostPanel() {
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
-      setIsExpanded(false);
+      toggleExpanded(false);
       router.refresh();
     } catch {
       setError("Ne mogu da kreiram post trenutno.");
@@ -86,7 +113,7 @@ export default function CreatePostPanel() {
         </div>
         <button
           type="button"
-          onClick={() => setIsExpanded((prev) => !prev)}
+          onClick={() => toggleExpanded(!isExpanded)}
           className="motion-button button-primary shrink-0"
         >
           {isExpanded ? "Close" : "New post"}

@@ -15,6 +15,8 @@ export type Post = {
   tags?: string[];
   score: number;
   votes: number;
+  favorites?: number;
+  isFavorited?: boolean;
   trendingScore?: number;
   controversialScore?: number;
   userRating?: number;
@@ -25,4 +27,11 @@ export type Post = {
   }>;
   user: User;
   createdAt?: string;
+};
+
+export type PostRater = {
+  id: string;
+  value: number;
+  createdAt?: string;
+  user: User;
 };

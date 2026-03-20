@@ -13,7 +13,13 @@ export type BackendPost = {
   hashtags?: string[];
   score?: number;
   votes?: number;
+  favorites?: number;
+  favorites_count?: number;
+  isFavorited?: boolean;
+  is_favorited?: boolean;
   ratings_count?: number;
+  userRating?: number;
+  user_rating?: number;
   createdAt?: string;
   created_at?: string;
   user?: {
@@ -52,6 +58,14 @@ export function mapBackendPosts(posts: BackendPost[]): Post[] {
           : [],
       score: Number(post.score ?? 0),
       votes: Number(post.votes ?? post.ratings_count ?? 0),
+      favorites: Number(post.favorites ?? post.favorites_count ?? 0),
+      isFavorited: Boolean(post.isFavorited ?? post.is_favorited ?? false),
+      userRating:
+        typeof post.userRating === "number"
+          ? post.userRating
+          : typeof post.user_rating === "number"
+            ? post.user_rating
+            : undefined,
       user: {
         id: post.user?.id || "unknown",
         username: post.user?.username || "anonymous",

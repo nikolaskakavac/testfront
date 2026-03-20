@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 function Icon({ children }: { children: React.ReactNode }) {
   return <span className="inline-flex h-5 w-5 items-center justify-center">{children}</span>;
@@ -54,12 +55,13 @@ function BellIcon() {
 }
 
 export default function SideNav() {
+  const pathname = usePathname();
   const items = [
-    { key: 'home', label: 'Home', icon: <HomeIcon />, active: true },
-    { key: 'explore', label: 'Explore', icon: <SearchIcon /> },
-    { key: 'categories', label: 'Categories', icon: <CategoriesIcon /> },
-    { key: 'favorites', label: 'Favorites', icon: <HeartIcon /> },
-    { key: 'notifications', label: 'Notifications', icon: <BellIcon /> },
+    { key: 'home', label: 'Home', icon: <HomeIcon />, href: '/', active: pathname === '/' },
+    { key: 'explore', label: 'Explore', icon: <SearchIcon />, href: '/' },
+    { key: 'categories', label: 'Categories', icon: <CategoriesIcon />, href: '/' },
+    { key: 'favorites', label: 'Favorites', icon: <HeartIcon />, href: '/likes', active: pathname === '/likes' },
+    { key: 'notifications', label: 'Notifications', icon: <BellIcon />, href: '/notifications' },
   ];
 
   return (
@@ -82,7 +84,7 @@ export default function SideNav() {
                     ].join(' ');
                     const iconClass = it.active ? 'rounded-lg bg-[rgba(255,255,255,0.14)] p-2 text-[color:var(--button-text)]' : 'text-[color:var(--muted)]';
                     return (
-                      <Link key={it.key} href="#" className={linkClass}>
+                      <Link key={it.key} href={it.href} className={linkClass}>
                         <span className={iconClass}>
                           <Icon>{it.icon}</Icon>
                         </span>
