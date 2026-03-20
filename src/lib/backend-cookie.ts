@@ -1,5 +1,14 @@
 import { NextResponse } from "next/server";
 
+function normalizeSetCookieHeaders(setCookies: string[]) {
+  return setCookies.flatMap((setCookie) =>
+    setCookie
+      .split(/,(?=\s*[A-Za-z0-9!#$%&'*+.^_`|~-]+=)/)
+      .map((part) => part.trim())
+      .filter(Boolean)
+  );
+}
+
 function parseSetCookieHeader(setCookie: string) {
   const parts = setCookie.split(";").map((part) => part.trim());
   const [nameValue, ...attributes] = parts;
@@ -79,7 +88,7 @@ function parseSetCookieHeader(setCookie: string) {
 }
 
 export function applyBackendSetCookies(response: NextResponse, setCookies: string[]) {
-  for (const setCookie of setCookies) {
+  for (const setCookie of normalizeSetCookieHeaders(setCookies)) {
     const parsed = parseSetCookieHeader(setCookie);
 
     if (!parsed) {

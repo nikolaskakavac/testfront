@@ -5,6 +5,9 @@ import BottomNav from "@/components/layout/bottom-nav";
 import SideNav from "@/components/layout/side-nav";
 import Topbar from "@/components/layout/topbar";
 import { getAuthSession } from "@/lib/auth-session";
+import AvatarUploadForm from "@/components/profile/avatar-upload-form";
+import Avatar from "@/components/user/avatar";
+import { getAvatarUrl } from "@/lib/user-avatar";
 
 const profilePosts = [
   {
@@ -41,6 +44,7 @@ export default async function ProfilePage() {
   const username = session.username || "rater_user";
   const email = session.email || "member@rater.app";
   const profileHandle = `@${username}`;
+  const avatarUrl = isAuthenticated ? await getAvatarUrl(username) : null;
 
   if (!isAuthenticated) {
     return (
@@ -82,15 +86,7 @@ export default async function ProfilePage() {
           <div className="overflow-hidden rounded-[36px] border border-[color:var(--line)] bg-[var(--hero-bg)] shadow-[var(--shadow-soft)] backdrop-blur-xl">
             <div className="grid gap-6 p-6 sm:p-8 lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:items-center">
               <div className="flex items-center gap-4">
-                <div className="relative h-24 w-24 overflow-hidden rounded-[28px] border border-[color:var(--line-strong)] bg-[var(--surface-2)] shadow-[var(--shadow-card)]">
-                  <Image
-                    src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=900&q=80"
-                    alt="Profile avatar"
-                    fill
-                    sizes="96px"
-                    className="object-cover"
-                  />
-                </div>
+                <Avatar username={username} avatarUrl={avatarUrl} size={96} priority />
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.28em] text-orange-300/90">
                     Your profile
@@ -170,6 +166,7 @@ export default async function ProfilePage() {
               <div className="rounded-[32px] border border-[color:var(--line)] bg-[var(--surface)] p-6 shadow-[var(--shadow-card)]">
                 <p className="text-sm font-semibold text-[color:var(--muted)]">Identity</p>
                 <div className="mt-4 space-y-4 text-sm text-[color:var(--muted)]">
+                  <AvatarUploadForm />
                   <div className="rounded-2xl border border-[color:var(--line)] bg-[var(--subtle-bg)] px-4 py-4">
                     <p className="text-[11px] uppercase tracking-[0.18em] text-orange-300/90">Role</p>
                     <p className="mt-2 text-base font-semibold text-[color:var(--text-strong)]">Curator / Rater</p>

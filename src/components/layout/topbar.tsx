@@ -2,13 +2,15 @@ import Link from "next/link";
 
 import LogoutButton from "@/components/auth/logout-button";
 import { getAuthSession } from "@/lib/auth-session";
+import { getAvatarUrl } from "@/lib/user-avatar";
+import Avatar from "@/components/user/avatar";
 import HoverSearch from "./hover-search";
 import ThemeToggle from "./theme-toggle";
 
 export default async function Topbar() {
   const session = await getAuthSession();
   const isAuthenticated = session.authenticated;
-  const profileInitial = session.username?.trim().charAt(0).toUpperCase() || "U";
+  const avatarUrl = session.username ? await getAvatarUrl(session.username) : null;
 
   return (
     <header className="motion-enter sticky top-0 z-30 border-b border-white/10 bg-[rgba(16,8,10,0.62)] backdrop-blur-[12px]">
@@ -62,9 +64,9 @@ export default async function Topbar() {
               <Link
                 href="/profile"
                 aria-label="Profile"
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-orange-200/45 bg-[linear-gradient(135deg,rgba(255,236,170,0.28),rgba(255,157,66,0.28),rgba(255,42,18,0.26))] text-sm font-bold text-white transition duration-300 hover:scale-[1.03] hover:brightness-110"
+                className="transition duration-300 hover:scale-[1.03] hover:brightness-110"
               >
-                {profileInitial}
+                <Avatar username={session.username || "user"} avatarUrl={avatarUrl} size={40} />
               </Link>
             </>
           ) : (
