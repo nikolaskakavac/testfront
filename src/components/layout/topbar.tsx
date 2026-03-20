@@ -10,7 +10,7 @@ import ThemeToggle from "./theme-toggle";
 export default async function Topbar() {
   const session = await getAuthSession();
   const isAuthenticated = session.authenticated;
-  const avatarUrl = session.username ? await getAvatarUrl(session.username) : null;
+  const avatarUrl = getAvatarUrl(session.imgUrl);
 
   return (
     <header className="motion-enter sticky top-0 z-30 border-b border-white/10 bg-[rgba(16,8,10,0.62)] backdrop-blur-[12px]">

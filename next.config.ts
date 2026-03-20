@@ -8,6 +8,9 @@ const nextConfig: NextConfig = {
       {
         pathname: "/api/users/avatar/**",
       },
+      {
+        pathname: "/api/posts/image/**",
+      },
     ],
     remotePatterns: [
       {

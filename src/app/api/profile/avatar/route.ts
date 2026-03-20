@@ -1,15 +1,18 @@
 import fs from "node:fs/promises";
+import { cookies } from "next/headers";
 
 import { NextResponse } from "next/server";
 
 import { getAuthSession } from "@/lib/auth-session";
 import {
-  getAvatarEntry,
   getAvatarFilePath,
-  readAvatarIndex,
   sanitizeUsernameForFile,
-  writeAvatarIndex,
 } from "@/lib/user-avatar";
+
+const BACKEND_API_BASE_URL =
+  process.env.BACKEND_API_BASE_URL ||
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  "http://localhost:8080";
 
 const ALLOWED_TYPES = new Map([
   ["image/png", ".png"],
@@ -40,26 +43,45 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "Dozvoljeni su PNG, JPG i WEBP." }, { status: 400 });
   }
 
-  const index = await readAvatarIndex();
-  const usernameKey = session.username.trim().toLowerCase();
-  const previousEntry = await getAvatarEntry(session.username);
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get("session_token")?.value;
+  const csrfToken = cookieStore.get("csrf_token")?.value;
+  const refreshToken = cookieStore.get("refresh_token")?.value;
+  const previousFileName = session.imgUrl ? session.imgUrl.split("/").pop() : null;
 
   const fileName = `${sanitizeUsernameForFile(session.username)}-${Date.now()}${extension}`;
   const filePath = getAvatarFilePath(fileName);
   const bytes = Buffer.from(await file.arrayBuffer());
+  const dbPath = `images/users/${fileName}`;
 
   await fs.writeFile(filePath, bytes);
 
-  index[usernameKey] = {
-    fileName,
-    updatedAt: new Date().toISOString(),
-  };
+  const backendResponse = await fetch(`${BACKEND_API_BASE_URL}/web/profile/avatar`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Cookie: [
+        sessionToken ? `session_token=${sessionToken}` : "",
+        csrfToken ? `csrf_token=${csrfToken}` : "",
+        refreshToken ? `refresh_token=${refreshToken}` : "",
+      ]
+        .filter(Boolean)
+        .join("; "),
+      "X-CSRF-Token": csrfToken ?? "",
+    },
+    body: JSON.stringify({
+      img_url: dbPath,
+    }),
+    cache: "no-store",
+  });
 
-  await writeAvatarIndex(index);
+  if (!backendResponse.ok) {
+    await fs.rm(filePath, { force: true });
+    return NextResponse.json({ message: "Ne mogu da sacuvam profilnu u bazi." }, { status: backendResponse.status });
+  }
 
-  if (previousEntry && previousEntry.fileName !== "DEFAULT.png" && previousEntry.fileName !== fileName) {
-    const previousPath = getAvatarFilePath(previousEntry.fileName);
-    await fs.rm(previousPath, { force: true });
+  if (previousFileName && previousFileName !== "DEFAULT.png" && previousFileName !== fileName) {
+    await fs.rm(getAvatarFilePath(previousFileName), { force: true });
   }
 
   return NextResponse.json({
@@ -74,20 +96,36 @@ export async function DELETE() {
     return NextResponse.json({ message: "Moras biti ulogovan." }, { status: 401 });
   }
 
-  const index = await readAvatarIndex();
-  const usernameKey = session.username.trim().toLowerCase();
-  const previousEntry = index[usernameKey];
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get("session_token")?.value;
+  const csrfToken = cookieStore.get("csrf_token")?.value;
+  const refreshToken = cookieStore.get("refresh_token")?.value;
+  const previousFileName = session.imgUrl ? session.imgUrl.split("/").pop() : null;
 
-  if (!previousEntry) {
+  if (!previousFileName) {
     return NextResponse.json({ message: "Profilna vec nije postavljena." });
   }
 
-  delete index[usernameKey];
-  await writeAvatarIndex(index);
+  const backendResponse = await fetch(`${BACKEND_API_BASE_URL}/web/profile/avatar`, {
+    method: "DELETE",
+    headers: {
+      Cookie: [
+        sessionToken ? `session_token=${sessionToken}` : "",
+        csrfToken ? `csrf_token=${csrfToken}` : "",
+        refreshToken ? `refresh_token=${refreshToken}` : "",
+      ]
+        .filter(Boolean)
+        .join("; "),
+      "X-CSRF-Token": csrfToken ?? "",
+    },
+    cache: "no-store",
+  });
 
-  if (previousEntry.fileName !== "DEFAULT.png") {
-    await fs.rm(getAvatarFilePath(previousEntry.fileName), { force: true });
+  if (!backendResponse.ok) {
+    return NextResponse.json({ message: "Ne mogu da uklonim profilnu iz baze." }, { status: backendResponse.status });
   }
+
+  await fs.rm(getAvatarFilePath(previousFileName), { force: true });
 
   return NextResponse.json({
     message: "Profilna je uklonjena.",

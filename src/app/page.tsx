@@ -4,6 +4,8 @@ import Topbar from "@/components/layout/topbar";
 import BottomNav from "@/components/layout/bottom-nav";
 import SideNav from "@/components/layout/side-nav";
 import PostCard from "@/components/feed/post-card";
+import CreatePostPanel from "@/components/feed/create-post-panel";
+import { mapBackendPosts, type BackendPost } from "@/lib/post-feed";
 import type { Post } from "@/types";
 
 const MAX_POST_TITLE_LENGTH = 60;
@@ -103,7 +105,7 @@ const mockPosts = rawMockPosts.map((post) => ({
   ...post,
   title:
     post.title.length > MAX_POST_TITLE_LENGTH
-      ? `${post.title.slice(0, MAX_POST_TITLE_LENGTH - 1)}…`
+      ? `${post.title.slice(0, MAX_POST_TITLE_LENGTH - 3)}...`
       : post.title,
 }));
 
@@ -113,12 +115,11 @@ function normalizePosts(posts: Post[]): Post[] {
     title: (() => {
       const title = post.title || "Untitled post";
       return title.length > MAX_POST_TITLE_LENGTH
-        ? `${title.slice(0, MAX_POST_TITLE_LENGTH - 1)}…`
+        ? `${title.slice(0, MAX_POST_TITLE_LENGTH - 3)}...`
         : title;
     })(),
   }));
 }
-
 async function loadPosts(): Promise<Post[]> {
   try {
     const response = await fetch(`${BACKEND_API_BASE_URL}${BACKEND_POSTS_PATH}`, {
@@ -136,7 +137,7 @@ async function loadPosts(): Promise<Post[]> {
       return mockPosts;
     }
 
-    return normalizePosts(posts as Post[]);
+    return normalizePosts(mapBackendPosts(posts as BackendPost[]));
   } catch {
     return mockPosts;
   }
@@ -166,6 +167,8 @@ export default async function HomePage() {
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-bold text-[color:var(--text-strong)]">Home</h2>
               </div>
+
+              <CreatePostPanel />
 
               <div className="grid grid-cols-1 gap-4">
                 {posts.map((post) => (
@@ -222,3 +225,7 @@ export default async function HomePage() {
     </main>
   );
 }
+
+
+
+

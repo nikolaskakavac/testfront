@@ -73,8 +73,8 @@ export default function SignupPage() {
   return (
     <main className="flex min-h-screen items-center justify-center px-4 py-10 text-[color:var(--text)]">
       <div className="w-full max-w-5xl overflow-hidden rounded-[36px] border border-[color:var(--line)] bg-[var(--hero-bg)] shadow-[var(--shadow-soft)] backdrop-blur-xl md:grid md:grid-cols-[0.95fr_1.05fr]">
-        <section className="border-b border-[color:var(--line)] bg-[var(--surface-2)] p-8 sm:p-10 md:border-b-0 md:border-r">
-          <div className="rounded-[28px] border border-[color:var(--line)] bg-[var(--surface)] p-6 shadow-[var(--shadow-card)]">
+        <section className="border-b border-[color:var(--line)] p-8 sm:p-10 md:border-b-0 md:border-r">
+          <div className="rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(6,6,8,0.92),rgba(13,11,15,0.94))] p-6 shadow-[0_28px_60px_rgba(0,0,0,0.34)]">
             <div>
               <p className="text-2xl font-bold text-[color:var(--text-strong)]">Create profile</p>
               <p className="mt-1 text-sm text-[color:var(--muted)]">Create your profile and start rating.</p>
@@ -86,23 +86,23 @@ export default function SignupPage() {
                 placeholder="Username"
                 value={username}
                 onChange={(event) => setUsername(event.target.value)}
-                className="w-full rounded-2xl border border-[color:var(--line)] bg-[var(--input-bg)] px-4 py-3 text-sm text-[color:var(--text)] outline-none placeholder:text-[color:var(--muted)]"
+                className="w-full rounded-2xl border border-white/10 bg-[rgba(3,3,5,0.86)] px-4 py-3 text-sm text-[color:var(--text)] outline-none placeholder:text-[color:var(--muted)]"
               />
               <input
                 type="email"
                 placeholder="Email"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                className="w-full rounded-2xl border border-[color:var(--line)] bg-[var(--input-bg)] px-4 py-3 text-sm text-[color:var(--text)] outline-none placeholder:text-[color:var(--muted)]"
+                className="w-full rounded-2xl border border-white/10 bg-[rgba(3,3,5,0.86)] px-4 py-3 text-sm text-[color:var(--text)] outline-none placeholder:text-[color:var(--muted)]"
               />
               <input
                 type="password"
                 placeholder="Password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
-                className="w-full rounded-2xl border border-[color:var(--line)] bg-[var(--input-bg)] px-4 py-3 text-sm text-[color:var(--text)] outline-none placeholder:text-[color:var(--muted)]"
+                className="w-full rounded-2xl border border-white/10 bg-[rgba(3,3,5,0.86)] px-4 py-3 text-sm text-[color:var(--text)] outline-none placeholder:text-[color:var(--muted)]"
               />
-              <div className="rounded-2xl border border-[color:var(--line)] bg-[var(--subtle-bg)] px-4 py-3 text-xs leading-6 text-[color:var(--muted)]">
+              <div className="rounded-2xl border border-white/10 bg-[rgba(8,8,11,0.78)] px-4 py-3 text-xs leading-6 text-[color:var(--muted)]">
                 Password rules: 8-32 characters, at least one uppercase letter, and at least one number.
               </div>
               <input
@@ -110,7 +110,7 @@ export default function SignupPage() {
                 placeholder="Confirm password"
                 value={confirmPassword}
                 onChange={(event) => setConfirmPassword(event.target.value)}
-                className="w-full rounded-2xl border border-[color:var(--line)] bg-[var(--input-bg)] px-4 py-3 text-sm text-[color:var(--text)] outline-none placeholder:text-[color:var(--muted)]"
+                className="w-full rounded-2xl border border-white/10 bg-[rgba(3,3,5,0.86)] px-4 py-3 text-sm text-[color:var(--text)] outline-none placeholder:text-[color:var(--muted)]"
               />
               {error ? (
                 <p className="rounded-2xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
@@ -141,7 +141,7 @@ export default function SignupPage() {
         </section>
 
         <section className="flex flex-col justify-between p-8 sm:p-10">
-          <div>
+          <div className="rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(6,6,8,0.92),rgba(13,11,15,0.94))] p-6 shadow-[0_28px_60px_rgba(0,0,0,0.34)]">
             <Link href="/" className="inline-flex items-center gap-3">
               <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--surface-2)] shadow-[var(--shadow-card)] ring-1 ring-[color:var(--line)]">
                 <span className="brand-text-gradient text-lg font-black">R</span>
@@ -165,13 +165,13 @@ export default function SignupPage() {
           </div>
 
           <div className="mt-10 space-y-3">
-            <div className="rounded-2xl border border-[color:var(--line)] bg-[var(--surface)] px-4 py-4">
+            <div className="rounded-2xl border border-white/10 bg-[rgba(7,7,9,0.82)] px-4 py-4 shadow-[0_18px_40px_rgba(0,0,0,0.24)]">
               <p className="text-[11px] uppercase tracking-[0.18em] text-[color:var(--muted)]">Personal stats</p>
               <p className="mt-2 text-sm text-[color:var(--muted)]">
                 Save your ratings, favorite categories, and streak progress in one profile.
               </p>
             </div>
-            <div className="rounded-2xl border border-[rgba(255,56,20,0.18)] bg-[linear-gradient(135deg,rgba(255,244,194,0.12),rgba(255,186,77,0.14),rgba(255,48,22,0.12))] px-4 py-4">
+            <div className="rounded-2xl border border-[rgba(255,90,30,0.2)] bg-[linear-gradient(135deg,rgba(10,10,12,0.88),rgba(24,15,12,0.92),rgba(34,12,8,0.9))] px-4 py-4 shadow-[0_18px_40px_rgba(0,0,0,0.24)]">
               <p className="text-[11px] uppercase tracking-[0.18em] text-orange-300/90">Early access</p>
               <p className="mt-2 text-sm text-[color:var(--text)]">
                 New users get featured prompts, curated categories, and faster leaderboard visibility.
@@ -183,3 +183,5 @@ export default function SignupPage() {
     </main>
   );
 }
+
+

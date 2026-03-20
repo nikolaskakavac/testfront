@@ -1,61 +1,6 @@
-import fs from "node:fs/promises";
 import path from "node:path";
 
 const USERS_IMAGE_DIR = path.join(process.cwd(), "baza", "images", "users");
-const USERS_IMAGE_INDEX = path.join(USERS_IMAGE_DIR, "index.json");
-
-type AvatarIndexEntry = {
-  fileName: string;
-  updatedAt: string;
-};
-
-type AvatarIndex = Record<string, AvatarIndexEntry>;
-
-function normalizeUsername(username: string) {
-  return username.trim().toLowerCase();
-}
-
-async function ensureAvatarIndexFile() {
-  await fs.mkdir(USERS_IMAGE_DIR, { recursive: true });
-
-  try {
-    await fs.access(USERS_IMAGE_INDEX);
-  } catch {
-    await fs.writeFile(USERS_IMAGE_INDEX, "{}\n", "utf8");
-  }
-}
-
-export async function readAvatarIndex(): Promise<AvatarIndex> {
-  await ensureAvatarIndexFile();
-
-  try {
-    const raw = await fs.readFile(USERS_IMAGE_INDEX, "utf8");
-    const parsed = JSON.parse(raw) as AvatarIndex;
-    return parsed ?? {};
-  } catch {
-    return {};
-  }
-}
-
-export async function writeAvatarIndex(index: AvatarIndex) {
-  await ensureAvatarIndexFile();
-  await fs.writeFile(USERS_IMAGE_INDEX, `${JSON.stringify(index, null, 2)}\n`, "utf8");
-}
-
-export async function getAvatarEntry(username: string) {
-  const index = await readAvatarIndex();
-  return index[normalizeUsername(username)] ?? null;
-}
-
-export async function getAvatarUrl(username: string) {
-  const entry = await getAvatarEntry(username);
-
-  if (!entry) {
-    return null;
-  }
-
-  return `/api/users/avatar/${encodeURIComponent(username)}?v=${encodeURIComponent(entry.updatedAt)}`;
-}
 
 export function getAvatarFilePath(fileName: string) {
   return path.join(USERS_IMAGE_DIR, fileName);
@@ -81,4 +26,17 @@ export function getAvatarMimeType(fileName: string) {
 
 export function sanitizeUsernameForFile(username: string) {
   return username.trim().toLowerCase().replace(/[^a-z0-9_-]/g, "-");
+}
+
+export function getAvatarUrl(imgUrl?: string | null) {
+  if (!imgUrl) {
+    return null;
+  }
+
+  const fileName = path.basename(imgUrl);
+  if (!fileName || fileName === "DEFAULT.png") {
+    return null;
+  }
+
+  return `/api/users/avatar/${encodeURIComponent(fileName)}`;
 }

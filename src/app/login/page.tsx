@@ -48,7 +48,7 @@ export default function LoginPage() {
     <main className="flex min-h-screen items-center justify-center px-4 py-10 text-[color:var(--text)]">
       <div className="w-full max-w-5xl overflow-hidden rounded-[36px] border border-[color:var(--line)] bg-[var(--hero-bg)] shadow-[var(--shadow-soft)] backdrop-blur-xl md:grid md:grid-cols-[1.1fr_0.9fr]">
         <section className="flex flex-col justify-between p-8 sm:p-10">
-          <div>
+          <div className="rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(6,6,8,0.92),rgba(13,11,15,0.94))] p-6 shadow-[0_28px_60px_rgba(0,0,0,0.34)]">
             <Link href="/" className="inline-flex items-center gap-3">
               <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--surface-2)] shadow-[var(--shadow-card)] ring-1 ring-[color:var(--line)]">
                 <span className="brand-text-gradient text-lg font-black">R</span>
@@ -72,23 +72,23 @@ export default function LoginPage() {
           </div>
 
           <div className="mt-10 grid gap-3 sm:grid-cols-3">
-            <div className="rounded-2xl border border-[color:var(--line)] bg-[var(--surface)] px-4 py-4">
+            <div className="rounded-2xl border border-white/10 bg-[rgba(7,7,9,0.82)] px-4 py-4 shadow-[0_18px_40px_rgba(0,0,0,0.24)]">
               <p className="text-[color:var(--muted)]">Active users</p>
               <p className="mt-2 text-2xl font-bold text-[color:var(--text-strong)]">28k</p>
             </div>
-            <div className="rounded-2xl border border-[color:var(--line)] bg-[var(--surface)] px-4 py-4">
+            <div className="rounded-2xl border border-white/10 bg-[rgba(7,7,9,0.82)] px-4 py-4 shadow-[0_18px_40px_rgba(0,0,0,0.24)]">
               <p className="text-[color:var(--muted)]">Ratings today</p>
               <p className="mt-2 text-2xl font-bold text-[color:var(--text-strong)]">18.4k</p>
             </div>
-            <div className="rounded-2xl border border-[color:var(--line)] bg-[var(--surface)] px-4 py-4">
+            <div className="rounded-2xl border border-white/10 bg-[rgba(7,7,9,0.82)] px-4 py-4 shadow-[0_18px_40px_rgba(0,0,0,0.24)]">
               <p className="text-[color:var(--muted)]">Live debates</p>
               <p className="mt-2 text-2xl font-bold text-[color:var(--text-strong)]">241</p>
             </div>
           </div>
         </section>
 
-        <section className="border-t border-[color:var(--line)] bg-[var(--surface-2)] p-8 sm:p-10 md:border-l md:border-t-0">
-          <div className="rounded-[28px] border border-[color:var(--line)] bg-[var(--surface)] p-6 shadow-[var(--shadow-card)]">
+        <section className="border-t border-[color:var(--line)] p-8 sm:p-10 md:border-l md:border-t-0">
+          <div className="rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(6,6,8,0.92),rgba(13,11,15,0.94))] p-6 shadow-[0_28px_60px_rgba(0,0,0,0.34)]">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-2xl font-bold text-[color:var(--text-strong)]">Sign in</p>
@@ -106,7 +106,7 @@ export default function LoginPage() {
                 placeholder="Username"
                 value={username}
                 onChange={(event) => setUsername(event.target.value)}
-                className="w-full rounded-2xl border border-[color:var(--line)] bg-[var(--input-bg)] px-4 py-3 text-sm text-[color:var(--text)] outline-none placeholder:text-[color:var(--muted)]"
+                className="w-full rounded-2xl border border-white/10 bg-[rgba(3,3,5,0.86)] px-4 py-3 text-sm text-[color:var(--text)] outline-none placeholder:text-[color:var(--muted)]"
               />
               <input
                 type="password"
@@ -114,7 +114,7 @@ export default function LoginPage() {
                 placeholder="Password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
-                className="w-full rounded-2xl border border-[color:var(--line)] bg-[var(--input-bg)] px-4 py-3 text-sm text-[color:var(--text)] outline-none placeholder:text-[color:var(--muted)]"
+                className="w-full rounded-2xl border border-white/10 bg-[rgba(3,3,5,0.86)] px-4 py-3 text-sm text-[color:var(--text)] outline-none placeholder:text-[color:var(--muted)]"
               />
               {error ? (
                 <p className="rounded-2xl border border-rose-500/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
@@ -151,4 +151,8 @@ export default function LoginPage() {
     </main>
   );
 }
+
+
+
+
 

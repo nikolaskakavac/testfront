@@ -36,6 +36,11 @@ func (app *App) NewChiRouter(routercfg config.RouterConfig) chi.Router {
 		r.Post("/login", app.Cookie.Login)
 		r.Post("/logout", app.Cookie.Logout)
 		r.Get("/session", app.Cookie.Session)
+		r.Post("/posts", app.Cookie.CreatePost)
+		r.Get("/posts", app.Cookie.ListPosts)
+		r.Delete("/posts/{postID}", app.Cookie.DeletePost)
+		r.Patch("/profile/avatar", app.Cookie.UpdateProfileAvatar)
+		r.Delete("/profile/avatar", app.Cookie.DeleteProfileAvatar)
 
 		r.Delete("/delete", app.Cookie.Delete)
 

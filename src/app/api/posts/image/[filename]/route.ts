@@ -2,28 +2,28 @@ import fs from "node:fs/promises";
 
 import { NextResponse } from "next/server";
 
-import { getAvatarFilePath, getAvatarMimeType } from "@/lib/user-avatar";
+import { getPostImageFilePath, getPostImageMimeType } from "@/lib/post-image";
 
 type RouteContext = {
   params: Promise<{
-    username: string;
+    filename: string;
   }>;
 };
 
 export async function GET(_request: Request, context: RouteContext) {
-  const { username: fileName } = await context.params;
+  const { filename } = await context.params;
 
   try {
-    const filePath = getAvatarFilePath(fileName);
+    const filePath = getPostImageFilePath(filename);
     const file = await fs.readFile(filePath);
 
     return new NextResponse(file, {
       headers: {
-        "Content-Type": getAvatarMimeType(fileName),
+        "Content-Type": getPostImageMimeType(filename),
         "Cache-Control": "public, max-age=31536000, immutable",
       },
     });
   } catch {
-    return new NextResponse("Avatar not found", { status: 404 });
+    return new NextResponse("Image not found", { status: 404 });
   }
 }

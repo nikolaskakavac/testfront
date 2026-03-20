@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 
 import BottomNav from "@/components/layout/bottom-nav";
@@ -6,37 +5,36 @@ import SideNav from "@/components/layout/side-nav";
 import Topbar from "@/components/layout/topbar";
 import { getAuthSession } from "@/lib/auth-session";
 import AvatarUploadForm from "@/components/profile/avatar-upload-form";
+import ProfilePostsGrid from "@/components/profile/profile-posts-grid";
 import Avatar from "@/components/user/avatar";
 import { getAvatarUrl } from "@/lib/user-avatar";
-
-const profilePosts = [
-  {
-    id: "p1",
-    title: "Nike Dunk Low Panda",
-    category: "Sneakers",
-    score: 94,
-    imageUrl:
-      "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=1200&q=80",
-  },
-  {
-    id: "p2",
-    title: "Minimal Gaming Setup",
-    category: "Setups",
-    score: 83,
-    imageUrl:
-      "https://images.unsplash.com/photo-1511919884226-fd3cad34687c?auto=format&fit=crop&w=1200&q=80",
-  },
-  {
-    id: "p3",
-    title: "Neon Street Portrait",
-    category: "Photography",
-    score: 88,
-    imageUrl:
-      "https://images.unsplash.com/photo-1516726817505-f5ed825624d8?auto=format&fit=crop&w=1200&q=80",
-  },
-];
+import { mapBackendPosts, type BackendPost } from "@/lib/post-feed";
 
 const favoriteCategories = ["Sneakers", "Setups", "Streetwear", "Photography"];
+
+const BACKEND_API_BASE_URL =
+  process.env.BACKEND_API_BASE_URL ||
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  "http://localhost:8080";
+
+async function loadProfilePosts(username: string) {
+  try {
+    const response = await fetch(`${BACKEND_API_BASE_URL}/web/posts?limit=100`, {
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      return [];
+    }
+
+    const data = await response.json();
+    const posts = Array.isArray(data?.posts) ? data.posts : [];
+
+    return mapBackendPosts(posts as BackendPost[]).filter((post) => post.user.username === username);
+  } catch {
+    return [];
+  }
+}
 
 export default async function ProfilePage() {
   const session = await getAuthSession();
@@ -44,7 +42,8 @@ export default async function ProfilePage() {
   const username = session.username || "rater_user";
   const email = session.email || "member@rater.app";
   const profileHandle = `@${username}`;
-  const avatarUrl = isAuthenticated ? await getAvatarUrl(username) : null;
+  const avatarUrl = isAuthenticated ? getAvatarUrl(session.imgUrl) : null;
+  const profilePosts = isAuthenticated ? await loadProfilePosts(username) : [];
 
   if (!isAuthenticated) {
     return (
@@ -102,7 +101,7 @@ export default async function ProfilePage() {
 
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:min-w-[320px]">
                 {[
-                  { label: "Posts", value: "12" },
+                  { label: "Posts", value: String(profilePosts.length) },
                   { label: "Ratings", value: "418" },
                   { label: "Favorites", value: "63" },
                   { label: "Followers", value: "231" },
@@ -130,35 +129,27 @@ export default async function ProfilePage() {
                   <p className="text-sm font-semibold text-[color:var(--muted)]">Recent posts</p>
                   <p className="mt-1 text-2xl font-bold text-[color:var(--text-strong)]">Your latest drops</p>
                 </div>
-                <button className="motion-button button-secondary">Create post</button>
+                <Link href="/#create-post" className="motion-button button-secondary">
+                  Create post
+                </Link>
               </div>
 
-              <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                {profilePosts.map((post) => (
-                  <article
-                    key={post.id}
-                    className="overflow-hidden rounded-[24px] border border-[color:var(--line)] bg-[var(--subtle-bg)] shadow-[var(--shadow-card)]"
-                  >
-                    <div className="relative aspect-[4/5] overflow-hidden">
-                      <Image
-                        src={post.imageUrl}
-                        alt={post.title}
-                        fill
-                        sizes="(max-width: 768px) 100vw, 320px"
-                        className="object-cover"
-                      />
-                    </div>
-                    <div className="space-y-2 px-4 py-4">
-                      <p className="text-sm font-semibold text-[color:var(--text-strong)]">{post.title}</p>
-                      <div className="flex items-center justify-between text-xs text-[color:var(--muted)]">
-                        <span>{post.category}</span>
-                        <span className="rounded-full border border-[color:var(--line)] px-2 py-1 text-[color:var(--text-strong)]">
-                          {post.score}
-                        </span>
-                      </div>
-                    </div>
-                  </article>
-                ))}
+              <div className="mt-5">
+                {profilePosts.length ? (
+                  <ProfilePostsGrid
+                    posts={profilePosts.map((post) => ({
+                      id: post.id,
+                      title: post.title,
+                      category: post.category,
+                      score: post.score,
+                      imageUrl: post.imageUrl,
+                    }))}
+                  />
+                ) : (
+                  <div className="rounded-2xl border border-[color:var(--line)] bg-[var(--subtle-bg)] px-5 py-10 text-center text-sm text-[color:var(--muted)]">
+                    Jos nemas objava. Napravi prvi post i pojaviće se ovde.
+                  </div>
+                )}
               </div>
             </div>
 

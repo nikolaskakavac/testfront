@@ -9,6 +9,11 @@ export type AuthSession = {
   authenticated: boolean;
   username: string | null;
   email: string | null;
+  imgUrl: string | null;
+};
+
+type AuthSessionResponse = Partial<AuthSession> & {
+  img_url?: string | null;
 };
 
 export async function getAuthSession(): Promise<AuthSession> {
@@ -22,6 +27,7 @@ export async function getAuthSession(): Promise<AuthSession> {
       authenticated: false,
       username: null,
       email: null,
+      imgUrl: null,
     };
   }
 
@@ -45,21 +51,24 @@ export async function getAuthSession(): Promise<AuthSession> {
         authenticated: false,
         username: null,
         email: null,
+        imgUrl: null,
       };
     }
 
-    const data = (await backendResponse.json()) as Partial<AuthSession>;
+    const data = (await backendResponse.json()) as AuthSessionResponse;
 
     return {
       authenticated: Boolean(data.authenticated),
       username: data.username ?? null,
       email: data.email ?? null,
+      imgUrl: data.imgUrl ?? data.img_url ?? null,
     };
   } catch {
     return {
       authenticated: false,
       username: null,
       email: null,
+      imgUrl: null,
     };
   }
 }
