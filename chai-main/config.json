@@ -1,0 +1,9 @@
+{
+    "env": "dev.env",
+
+    "redis": false,
+
+    "mailing-config": "",
+
+    "handler-config": "config/handler-config.json"
+}

@@ -1,0 +1,93 @@
+package router
+
+import (
+	"context"
+	"errors"
+	"log"
+	"os"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
+
+	"github.com/pfilip04/chai/config"
+	"github.com/pfilip04/chai/mailing"
+)
+
+func NewRouter(ctx context.Context, configurations string) (chi.Router, *pgxpool.Pool, error) {
+
+	//
+	// Load the config
+
+	cfg, err := config.Load[config.Config](configurations)
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	//
+	// Load env
+
+	if err := LoadEnv(cfg.EnvFile); err != nil {
+		return nil, nil, err
+	}
+
+	//
+	// Connect to DB
+
+	dbpool, err := ConnectDB(ctx, "DATABASE_URL")
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	log.Println("Database ok")
+
+	//
+	// App init
+
+	secret := os.Getenv("SECRET_KEY")
+
+	if secret == "" {
+		return nil, nil, errors.New("SECRET_KEY IS NOT SET")
+	}
+
+	var senderinfo *mailing.Sender
+	var mcfg config.MailConfig
+
+	name, fdomain, domain, apikey := GetEnvSenderInfo()
+
+	if cfg.MailingCfg != "" {
+		senderinfo = mailing.NewSender(name, fdomain, domain, apikey)
+
+		mcfg, err = config.Load[config.MailConfig](cfg.MailingCfg)
+
+		if err != nil {
+			return nil, nil, err
+		}
+
+	} else {
+		senderinfo = nil
+		mcfg = config.MailConfig{}
+	}
+
+	hcfg, err := config.Load[config.HandlerConfig](cfg.HandlerCfg)
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	app := NewApp(dbpool)
+
+	app.InitCookie(hcfg.Cookie, senderinfo, mcfg)
+
+	app.InitJWT(hcfg.JWT, senderinfo, mcfg, secret)
+
+	app.InitCode(hcfg.Code)
+
+	//
+	// Router init
+
+	router := app.NewChiRouter(hcfg.Router)
+
+	return router, dbpool, nil
+}

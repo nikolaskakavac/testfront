@@ -1,0 +1,10 @@
+./app.go
+./authorize.go
+./change_password.go
+./cookie_settings.go
+./delete.go
+./forgot_password.go
+./login.go
+./logout.go
+./refresh.go
+./register.go
