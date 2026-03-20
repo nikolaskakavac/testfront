@@ -100,7 +100,7 @@ export default function PostCard({ post }: PostCardProps) {
   return (
     <>
       <article
-        className={`${cardClassName} border border-white/14`}
+        className={cardClassName}
         role="button"
         tabIndex={0}
         aria-label={`Open details for ${post.title}`}
