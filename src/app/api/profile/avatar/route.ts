@@ -66,3 +66,30 @@ export async function POST(request: Request) {
     message: "Profilna je uspesno sacuvana.",
   });
 }
+
+export async function DELETE() {
+  const session = await getAuthSession();
+
+  if (!session.authenticated || !session.username) {
+    return NextResponse.json({ message: "Moras biti ulogovan." }, { status: 401 });
+  }
+
+  const index = await readAvatarIndex();
+  const usernameKey = session.username.trim().toLowerCase();
+  const previousEntry = index[usernameKey];
+
+  if (!previousEntry) {
+    return NextResponse.json({ message: "Profilna vec nije postavljena." });
+  }
+
+  delete index[usernameKey];
+  await writeAvatarIndex(index);
+
+  if (previousEntry.fileName !== "DEFAULT.png") {
+    await fs.rm(getAvatarFilePath(previousEntry.fileName), { force: true });
+  }
+
+  return NextResponse.json({
+    message: "Profilna je uklonjena.",
+  });
+}

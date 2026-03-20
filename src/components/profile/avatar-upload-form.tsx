@@ -7,6 +7,7 @@ export default function AvatarUploadForm() {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRemoving, setIsRemoving] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
@@ -49,6 +50,35 @@ export default function AvatarUploadForm() {
     }
   }
 
+  async function handleRemove() {
+    setIsRemoving(true);
+    setMessage("");
+    setError("");
+
+    try {
+      const response = await fetch("/api/profile/avatar", {
+        method: "DELETE",
+      });
+
+      const data = (await response.json().catch(() => ({}))) as { message?: string };
+
+      if (!response.ok) {
+        setError(data.message || "Brisanje nije uspelo.");
+        return;
+      }
+
+      setMessage(data.message || "Profilna je uklonjena.");
+      if (inputRef.current) {
+        inputRef.current.value = "";
+      }
+      router.refresh();
+    } catch {
+      setError("Ne mogu da uklonim sliku trenutno.");
+    } finally {
+      setIsRemoving(false);
+    }
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
       <label className="block rounded-2xl border border-[color:var(--line)] bg-[var(--subtle-bg)] px-4 py-4 text-sm text-[color:var(--muted)]">
@@ -75,13 +105,23 @@ export default function AvatarUploadForm() {
         </p>
       ) : null}
 
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="motion-button button-primary w-full justify-center disabled:cursor-not-allowed disabled:opacity-70"
-      >
-        {isSubmitting ? "Saving..." : "Save profile photo"}
-      </button>
+      <div className="flex flex-col gap-3 sm:flex-row">
+        <button
+          type="submit"
+          disabled={isSubmitting || isRemoving}
+          className="motion-button button-primary w-full justify-center disabled:cursor-not-allowed disabled:opacity-70"
+        >
+          {isSubmitting ? "Saving..." : "Save profile photo"}
+        </button>
+        <button
+          type="button"
+          onClick={handleRemove}
+          disabled={isSubmitting || isRemoving}
+          className="motion-button button-secondary w-full justify-center disabled:cursor-not-allowed disabled:opacity-70"
+        >
+          {isRemoving ? "Removing..." : "Remove photo"}
+        </button>
+      </div>
     </form>
   );
 }

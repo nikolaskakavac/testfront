@@ -39,3 +39,17 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local avatar uploads
+/baza/images/users/index.json
+/baza/images/users/*.png
+/baza/images/users/*.jpg
+/baza/images/users/*.jpeg
+/baza/images/users/*.webp
+!/baza/images/users/DEFAULT.png
+
+# local go artifacts
+/chai-main/.gocache/
+/chai-main/.gomodcache/
+/chai-main/backend.log
+/chai-main/backend.err.log
