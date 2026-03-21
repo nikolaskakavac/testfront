@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 import type { Post } from "@/types";
@@ -59,6 +60,9 @@ export default function PostModal({ post, isOpen, onClose }: PostModalProps) {
 
   const hasMultiple = images.length > 1;
   const subject = post.title.slice(0, 60);
+  const hasPublicProfile = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    post.user.id
+  );
 
   const toggleFavorite = async () => {
     if (isSavingFavorite) {
@@ -186,9 +190,19 @@ export default function PostModal({ post, isOpen, onClose }: PostModalProps) {
 
         <div className="absolute bottom-4 left-4 max-w-[80%] text-white">
           <p className="line-clamp-2 max-w-[30ch] break-words text-xl font-bold leading-6 text-white">{subject}</p>
-          <p className="mt-1 text-base font-semibold text-white/85" style={{ fontFamily: "rustic_roadway, cursive" }}>
-            @{post.user.username}
-          </p>
+          {hasPublicProfile ? (
+            <Link
+              href={`/u/${encodeURIComponent(post.user.username)}`}
+              className="mt-1 inline-block text-base font-semibold text-white/85 transition hover:text-white"
+              style={{ fontFamily: "rustic_roadway, cursive" }}
+            >
+              @{post.user.username}
+            </Link>
+          ) : (
+            <p className="mt-1 text-base font-semibold text-white/85" style={{ fontFamily: "rustic_roadway, cursive" }}>
+              @{post.user.username}
+            </p>
+          )}
         </div>
       </div>
     </div>

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 
 import LogoutButton from "@/components/auth/logout-button";
 import { getAuthSession } from "@/lib/auth-session";
@@ -7,10 +8,51 @@ import Avatar from "@/components/user/avatar";
 import HoverSearch from "./hover-search";
 import ThemeToggle from "./theme-toggle";
 
+const BACKEND_API_BASE_URL =
+  process.env.BACKEND_API_BASE_URL ||
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  "http://localhost:8080";
+
+async function loadNotificationCount() {
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get("session_token")?.value;
+  const csrfToken = cookieStore.get("csrf_token")?.value;
+  const refreshToken = cookieStore.get("refresh_token")?.value;
+
+  if (!sessionToken) {
+    return 0;
+  }
+
+  try {
+    const response = await fetch(`${BACKEND_API_BASE_URL}/web/notifications`, {
+      headers: {
+        Cookie: [
+          `session_token=${sessionToken}`,
+          csrfToken ? `csrf_token=${csrfToken}` : "",
+          refreshToken ? `refresh_token=${refreshToken}` : "",
+        ]
+          .filter(Boolean)
+          .join("; "),
+      },
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      return 0;
+    }
+
+    const data = (await response.json()) as { notifications?: unknown[] };
+    return Array.isArray(data.notifications) ? data.notifications.length : 0;
+  } catch {
+    return 0;
+  }
+}
+
 export default async function Topbar() {
   const session = await getAuthSession();
   const isAuthenticated = session.authenticated;
   const avatarUrl = getAvatarUrl(session.imgUrl);
+  const notificationCount = isAuthenticated ? await loadNotificationCount() : 0;
 
   return (
     <header className="motion-enter sticky top-0 z-30 border-b border-white/10 bg-[rgba(16,8,10,0.62)] backdrop-blur-[12px]">
@@ -45,12 +87,17 @@ export default async function Topbar() {
               <Link
                 href="/notifications"
                 aria-label="Notifications"
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-orange-200/40 bg-[linear-gradient(135deg,rgba(255,234,166,0.2),rgba(255,151,62,0.2),rgba(255,47,21,0.22))] text-amber-50/90 transition duration-300 hover:scale-[1.03] hover:brightness-110"
+                className="relative flex h-10 w-10 items-center justify-center rounded-full border border-orange-200/40 bg-[linear-gradient(135deg,rgba(255,234,166,0.2),rgba(255,151,62,0.2),rgba(255,47,21,0.22))] text-amber-50/90 transition duration-300 hover:scale-[1.03] hover:brightness-110"
               >
                 <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" stroke="currentColor" strokeWidth="1.8">
                   <path d="M15 17h5l-1.4-1.4a2 2 0 0 1-.6-1.4V11a6 6 0 1 0-12 0v3.2a2 2 0 0 1-.6 1.4L4 17h5" />
                   <path d="M9.5 17a2.5 2.5 0 0 0 5 0" />
                 </svg>
+                {notificationCount > 0 ? (
+                  <span className="absolute -right-1 -top-1 min-w-[1.2rem] rounded-full border border-white/20 bg-[linear-gradient(95deg,#ffe7a8_0%,#ffbe61_34%,#ff7a36_68%,#ff2f16_100%)] px-1.5 py-0.5 text-center text-[10px] font-black leading-none text-white shadow-[0_8px_18px_rgba(165,65,28,0.32)]">
+                    {notificationCount > 9 ? "9+" : notificationCount}
+                  </span>
+                ) : null}
               </Link>
               <Link
                 href="/likes"

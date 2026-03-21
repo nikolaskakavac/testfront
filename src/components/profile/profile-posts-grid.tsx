@@ -14,9 +14,10 @@ type ProfilePost = {
 
 type ProfilePostsGridProps = {
   posts: ProfilePost[];
+  canDelete?: boolean;
 };
 
-export default function ProfilePostsGrid({ posts }: ProfilePostsGridProps) {
+export default function ProfilePostsGrid({ posts, canDelete = true }: ProfilePostsGridProps) {
   const router = useRouter();
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -67,14 +68,16 @@ export default function ProfilePostsGrid({ posts }: ProfilePostsGridProps) {
                 sizes="(max-width: 768px) 100vw, 320px"
                 className="object-cover"
               />
-              <button
-                type="button"
-                onClick={() => handleDelete(post.id)}
-                disabled={removingId === post.id}
-                className="absolute right-3 top-3 rounded-full border border-white/10 bg-black/60 px-3 py-2 text-xs font-semibold text-white backdrop-blur-sm transition hover:bg-black/80 disabled:cursor-not-allowed disabled:opacity-70"
-              >
-                {removingId === post.id ? "Deleting..." : "Delete"}
-              </button>
+              {canDelete ? (
+                <button
+                  type="button"
+                  onClick={() => handleDelete(post.id)}
+                  disabled={removingId === post.id}
+                  className="absolute right-3 top-3 rounded-full border border-white/10 bg-black/60 px-3 py-2 text-xs font-semibold text-white backdrop-blur-sm transition hover:bg-black/80 disabled:cursor-not-allowed disabled:opacity-70"
+                >
+                  {removingId === post.id ? "Deleting..." : "Delete"}
+                </button>
+              ) : null}
             </div>
             <div className="space-y-2 px-4 py-4">
               <p className="text-sm font-semibold text-[color:var(--text-strong)]">{post.title}</p>

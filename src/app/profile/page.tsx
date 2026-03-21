@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 
 import BottomNav from "@/components/layout/bottom-nav";
 import SideNav from "@/components/layout/side-nav";
@@ -36,6 +37,76 @@ async function loadProfilePosts(username: string) {
   }
 }
 
+type FollowListUser = {
+  id: string;
+  username: string;
+  avatarUrl?: string;
+};
+
+async function getBackendCookieHeader() {
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get("session_token")?.value;
+  const csrfToken = cookieStore.get("csrf_token")?.value;
+  const refreshToken = cookieStore.get("refresh_token")?.value;
+
+  return [
+    sessionToken ? `session_token=${sessionToken}` : "",
+    csrfToken ? `csrf_token=${csrfToken}` : "",
+    refreshToken ? `refresh_token=${refreshToken}` : "",
+  ]
+    .filter(Boolean)
+    .join("; ");
+}
+
+async function loadFollowList(userId: string, type: "followers" | "following"): Promise<FollowListUser[]> {
+  try {
+    const cookieHeader = await getBackendCookieHeader();
+    const response = await fetch(`${BACKEND_API_BASE_URL}/web/users/${userId}/${type}`, {
+      headers: {
+        Cookie: cookieHeader,
+      },
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      return [];
+    }
+
+    const data = await response.json();
+    const users = Array.isArray(data?.users) ? data.users : [];
+
+    return users.map((user) => ({
+      id: user.id,
+      username: user.username,
+      avatarUrl: getAvatarUrl(user.avatarUrl ?? user.avatar_url) ?? undefined,
+    }));
+  } catch {
+    return [];
+  }
+}
+
+async function loadFavoriteCount(): Promise<number> {
+  try {
+    const cookieHeader = await getBackendCookieHeader();
+    const response = await fetch(`${BACKEND_API_BASE_URL}/web/favorites`, {
+      headers: {
+        Cookie: cookieHeader,
+      },
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      return 0;
+    }
+
+    const data = await response.json();
+    const posts = Array.isArray(data?.posts) ? data.posts : [];
+    return posts.length;
+  } catch {
+    return 0;
+  }
+}
+
 export default async function ProfilePage() {
   const session = await getAuthSession();
   const isAuthenticated = session.authenticated;
@@ -44,6 +115,10 @@ export default async function ProfilePage() {
   const profileHandle = `@${username}`;
   const avatarUrl = isAuthenticated ? getAvatarUrl(session.imgUrl) : null;
   const profilePosts = isAuthenticated ? await loadProfilePosts(username) : [];
+  const followers = isAuthenticated && session.id ? await loadFollowList(session.id, "followers") : [];
+  const following = isAuthenticated && session.id ? await loadFollowList(session.id, "following") : [];
+  const favoritesCount = isAuthenticated ? await loadFavoriteCount() : 0;
+  const ratingsCount = profilePosts.reduce((sum, post) => sum + (post.userRating ? 1 : 0), 0);
 
   if (!isAuthenticated) {
     return (
@@ -100,11 +175,12 @@ export default async function ProfilePage() {
               </div>
 
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:min-w-[320px]">
-                {[
+                {[ 
                   { label: "Posts", value: String(profilePosts.length) },
-                  { label: "Ratings", value: "418" },
-                  { label: "Favorites", value: "63" },
-                  { label: "Followers", value: "231" },
+                  { label: "Followers", value: String(session.followers) },
+                  { label: "Following", value: String(session.followings) },
+                  { label: "Ratings", value: String(ratingsCount) },
+                  { label: "Favorites", value: String(favoritesCount) },
                 ].map((item) => (
                   <div
                     key={item.label}
@@ -147,7 +223,7 @@ export default async function ProfilePage() {
                   />
                 ) : (
                   <div className="rounded-2xl border border-[color:var(--line)] bg-[var(--subtle-bg)] px-5 py-10 text-center text-sm text-[color:var(--muted)]">
-                    Jos nemas objava. Napravi prvi post i pojaviće se ovde.
+                    Jos nemas objava. Napravi prvi post i pojavi se ovde.
                   </div>
                 )}
               </div>
@@ -179,12 +255,12 @@ export default async function ProfilePage() {
               </div>
 
               <div className="rounded-[32px] border border-[color:var(--line)] bg-[var(--surface)] p-6 shadow-[var(--shadow-card)]">
-                <p className="text-sm font-semibold text-[color:var(--muted)]">Account energy</p>
+                <p className="text-sm font-semibold text-[color:var(--muted)]">Account snapshot</p>
                 <div className="mt-4 space-y-3">
                   {[
                     { label: "Profile completion", value: "86%" },
-                    { label: "Weekly streak", value: "7 days" },
-                    { label: "Saved favorites", value: "63 posts" },
+                    { label: "Followers", value: `${session.followers} users` },
+                    { label: "Saved favorites", value: `${favoritesCount} posts` },
                   ].map((item) => (
                     <div
                       key={item.label}
@@ -194,6 +270,78 @@ export default async function ProfilePage() {
                       <span className="font-semibold text-[color:var(--text-strong)]">{item.value}</span>
                     </div>
                   ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-[32px] border border-[color:var(--line)] bg-[var(--surface)] p-6 shadow-[var(--shadow-card)]">
+            <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+              <div>
+                <p className="text-sm font-semibold text-[color:var(--muted)]">Network</p>
+                <p className="mt-1 text-2xl font-bold text-[color:var(--text-strong)]">Followers & following</p>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-[color:var(--muted)]">
+                  The people who follow your taste, and the people whose drops you keep an eye on.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-6 grid gap-5 xl:grid-cols-2">
+              <div className="rounded-[28px] border border-[color:var(--line)] bg-[var(--subtle-bg)] p-4">
+                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-orange-300/90">Followers</p>
+                <div className="mt-4 space-y-3">
+                  {followers.length ? (
+                    followers.slice(0, 8).map((user) => (
+                      <Link
+                        key={user.id}
+                        href={`/u/${encodeURIComponent(user.username)}`}
+                        className="flex items-center gap-3 rounded-2xl border border-[color:var(--line)] bg-[var(--surface)] px-4 py-3 transition hover:border-[color:var(--line-strong)] hover:bg-[var(--subtle-bg-2)]"
+                      >
+                        <Avatar username={user.username} avatarUrl={user.avatarUrl} size={42} />
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-[color:var(--text-strong)]">
+                            @{user.username}
+                          </p>
+                          <p className="text-[11px] uppercase tracking-[0.12em] text-[color:var(--muted)]">
+                            Follows you
+                          </p>
+                        </div>
+                      </Link>
+                    ))
+                  ) : (
+                    <div className="rounded-2xl border border-[color:var(--line)] bg-[var(--surface)] px-4 py-6 text-sm text-[color:var(--muted)]">
+                      No followers yet.
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="rounded-[28px] border border-[color:var(--line)] bg-[var(--subtle-bg)] p-4">
+                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-orange-300/90">Following</p>
+                <div className="mt-4 space-y-3">
+                  {following.length ? (
+                    following.slice(0, 8).map((user) => (
+                      <Link
+                        key={user.id}
+                        href={`/u/${encodeURIComponent(user.username)}`}
+                        className="flex items-center gap-3 rounded-2xl border border-[color:var(--line)] bg-[var(--surface)] px-4 py-3 transition hover:border-[color:var(--line-strong)] hover:bg-[var(--subtle-bg-2)]"
+                      >
+                        <Avatar username={user.username} avatarUrl={user.avatarUrl} size={42} />
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-[color:var(--text-strong)]">
+                            @{user.username}
+                          </p>
+                          <p className="text-[11px] uppercase tracking-[0.12em] text-[color:var(--muted)]">
+                            You follow
+                          </p>
+                        </div>
+                      </Link>
+                    ))
+                  ) : (
+                    <div className="rounded-2xl border border-[color:var(--line)] bg-[var(--surface)] px-4 py-6 text-sm text-[color:var(--muted)]">
+                      Not following anyone yet.
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

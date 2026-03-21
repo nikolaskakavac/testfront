@@ -7,9 +7,12 @@ const BACKEND_API_BASE_URL =
 
 export type AuthSession = {
   authenticated: boolean;
+  id: string | null;
   username: string | null;
   email: string | null;
   imgUrl: string | null;
+  followers: number;
+  followings: number;
 };
 
 type AuthSessionResponse = Partial<AuthSession> & {
@@ -25,9 +28,12 @@ export async function getAuthSession(): Promise<AuthSession> {
   if (!sessionToken) {
     return {
       authenticated: false,
+      id: null,
       username: null,
       email: null,
       imgUrl: null,
+      followers: 0,
+      followings: 0,
     };
   }
 
@@ -49,9 +55,12 @@ export async function getAuthSession(): Promise<AuthSession> {
     if (!backendResponse.ok) {
       return {
         authenticated: false,
+        id: null,
         username: null,
         email: null,
         imgUrl: null,
+        followers: 0,
+        followings: 0,
       };
     }
 
@@ -59,16 +68,22 @@ export async function getAuthSession(): Promise<AuthSession> {
 
     return {
       authenticated: Boolean(data.authenticated),
+      id: (data as { id?: string | null }).id ?? null,
       username: data.username ?? null,
       email: data.email ?? null,
       imgUrl: data.imgUrl ?? data.img_url ?? null,
+      followers: Number((data as { followers?: number }).followers ?? 0),
+      followings: Number((data as { followings?: number }).followings ?? 0),
     };
   } catch {
     return {
       authenticated: false,
+      id: null,
       username: null,
       email: null,
       imgUrl: null,
+      followers: 0,
+      followings: 0,
     };
   }
 }

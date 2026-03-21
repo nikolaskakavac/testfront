@@ -47,9 +47,11 @@ next-env.d.ts
 /baza/images/users/*.jpeg
 /baza/images/users/*.webp
 !/baza/images/users/DEFAULT.png
+/baza/images/posts/
 
 # local go artifacts
 /chai-main/.gocache/
 /chai-main/.gomodcache/
 /chai-main/backend.log
 /chai-main/backend.err.log
+/dev-server.log
