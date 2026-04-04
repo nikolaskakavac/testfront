@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -376,10 +377,56 @@ func (c *CookieAuth) CreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var payload createPostRequest
-	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
-		http.Error(w, "Invalid post payload", http.StatusBadRequest)
+	ctx, cancel := context.WithTimeout(r.Context(), c.queryTimeout)
+	defer cancel()
+
+	repo := repository.New(c.DB)
+	userID, err := repo.GetUserIdBySessionId(ctx, sessionID)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
+	}
+
+	var payload createPostRequest
+	if strings.HasPrefix(strings.ToLower(r.Header.Get("Content-Type")), "multipart/form-data") {
+		if err := ensureMediaDirs(); err != nil {
+			http.Error(w, "Failed to prepare upload storage", http.StatusInternalServerError)
+			return
+		}
+
+		if err := r.ParseMultipartForm(32 << 20); err != nil {
+			http.Error(w, "Invalid post upload", http.StatusBadRequest)
+			return
+		}
+
+		payload.Title = strings.TrimSpace(r.FormValue("title"))
+		payload.Description = strings.TrimSpace(r.FormValue("description"))
+		payload.Category = strings.TrimSpace(r.FormValue("category"))
+
+		for _, rawTag := range strings.Split(r.FormValue("tags"), ",") {
+			tag := strings.TrimSpace(rawTag)
+			if tag != "" {
+				payload.Tags = append(payload.Tags, tag)
+			}
+		}
+
+		files := r.MultipartForm.File["images"]
+		for idx, header := range files {
+			fileName, err := saveUploadedFile(header, postMediaDir, payload.Title+"-"+strconv.Itoa(idx))
+			if err != nil {
+				for _, saved := range payload.Images {
+					removeMediaFile(postMediaDir, saved)
+				}
+				http.Error(w, "Failed to save uploaded image", http.StatusInternalServerError)
+				return
+			}
+			payload.Images = append(payload.Images, "images/posts/"+fileName)
+		}
+	} else {
+		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+			http.Error(w, "Invalid post payload", http.StatusBadRequest)
+			return
+		}
 	}
 
 	payload.Title = strings.TrimSpace(payload.Title)
@@ -403,6 +450,9 @@ func (c *CookieAuth) CreatePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if payload.Title == "" || len(filteredImages) == 0 {
+		for _, image := range payload.Images {
+			removeMediaFile(postMediaDir, image)
+		}
 		http.Error(w, "Title and at least one image are required", http.StatusBadRequest)
 		return
 	}
@@ -411,18 +461,11 @@ func (c *CookieAuth) CreatePost(w http.ResponseWriter, r *http.Request) {
 		payload.Category = "general"
 	}
 
-	ctx, cancel := context.WithTimeout(r.Context(), c.queryTimeout)
-	defer cancel()
-
-	repo := repository.New(c.DB)
-	userID, err := repo.GetUserIdBySessionId(ctx, sessionID)
-	if err != nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
-		return
-	}
-
 	tx, err := c.DB.Begin(ctx)
 	if err != nil {
+		for _, image := range filteredImages {
+			removeMediaFile(postMediaDir, image)
+		}
 		http.Error(w, "Failed to start transaction", http.StatusInternalServerError)
 		return
 	}
@@ -435,6 +478,9 @@ func (c *CookieAuth) CreatePost(w http.ResponseWriter, r *http.Request) {
 		RETURNING id
 	`, userID, filteredImages, payload.Title, payload.Description, payload.Category, filteredTags).Scan(&postID)
 	if err != nil {
+		for _, image := range filteredImages {
+			removeMediaFile(postMediaDir, image)
+		}
 		http.Error(w, "Failed to create post", http.StatusInternalServerError)
 		return
 	}
@@ -445,11 +491,17 @@ func (c *CookieAuth) CreatePost(w http.ResponseWriter, r *http.Request) {
 		WHERE id = $1
 	`, userID)
 	if err != nil {
+		for _, image := range filteredImages {
+			removeMediaFile(postMediaDir, image)
+		}
 		http.Error(w, "Failed to update user stats", http.StatusInternalServerError)
 		return
 	}
 
 	if err := tx.Commit(ctx); err != nil {
+		for _, image := range filteredImages {
+			removeMediaFile(postMediaDir, image)
+		}
 		http.Error(w, "Failed to save post", http.StatusInternalServerError)
 		return
 	}
@@ -530,6 +582,10 @@ func (c *CookieAuth) DeletePost(w http.ResponseWriter, r *http.Request) {
 	if err := tx.Commit(ctx); err != nil {
 		http.Error(w, "Failed to delete post", http.StatusInternalServerError)
 		return
+	}
+
+	for _, image := range images {
+		removeMediaFile(postMediaDir, filepath.Base(image))
 	}
 
 	w.Header().Set("Content-Type", "application/json")

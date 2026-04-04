@@ -1,10 +1,5 @@
-import fs from "node:fs/promises";
-import path from "node:path";
-
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-
-import { ensurePostsImageDir, getPostImageFilePath, sanitizePostFileName } from "@/lib/post-image";
 
 const BACKEND_API_BASE_URL =
   process.env.BACKEND_API_BASE_URL ||
@@ -58,41 +53,22 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "Dodaj bar jednu sliku." }, { status: 400 });
     }
 
-    await ensurePostsImageDir();
-
-    const savedPaths: string[] = [];
+    const backendForm = new FormData();
+    backendForm.append("title", title);
+    backendForm.append("description", description);
+    backendForm.append("category", category);
+    backendForm.append("tags", tags);
 
     for (const file of files) {
       if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
         return NextResponse.json({ message: "Dozvoljeni su PNG, JPG i WEBP." }, { status: 400 });
       }
-
-      const extension =
-        path.extname(file.name) ||
-        (file.type === "image/png" ? ".png" : file.type === "image/webp" ? ".webp" : ".jpg");
-      const fileName = `${sanitizePostFileName(title || "post")}-${Date.now()}-${savedPaths.length}${extension}`;
-      const filePath = getPostImageFilePath(fileName);
-      const bytes = Buffer.from(await file.arrayBuffer());
-
-      await fs.writeFile(filePath, bytes);
-      savedPaths.push(`images/posts/${fileName}`);
+      backendForm.append("images", file);
     }
-
-    const body = JSON.stringify({
-      title,
-      description,
-      category,
-      images: savedPaths,
-      tags: tags
-        .split(",")
-        .map((tag) => tag.trim())
-        .filter(Boolean),
-    });
 
     const backendResponse = await fetch(`${BACKEND_API_BASE_URL}${BACKEND_POSTS_PATH}`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
         Cookie: [
           `session_token=${sessionToken}`,
           `csrf_token=${csrfToken}`,
@@ -102,18 +78,9 @@ export async function POST(request: Request) {
           .join("; "),
         "X-CSRF-Token": csrfToken,
       },
-      body,
+      body: backendForm,
       cache: "no-store",
     });
-
-    if (!backendResponse.ok) {
-      await Promise.all(
-        savedPaths.map(async (imgPath) => {
-          const fileName = path.basename(imgPath);
-          await fs.rm(getPostImageFilePath(fileName), { force: true });
-        })
-      );
-    }
 
     const text = await backendResponse.text();
     const contentType = backendResponse.headers.get("content-type") ?? "application/json";

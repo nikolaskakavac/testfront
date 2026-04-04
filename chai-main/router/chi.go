@@ -1,6 +1,7 @@
 package router
 
 import (
+	"net/http"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -27,6 +28,14 @@ func (app *App) NewChiRouter(routercfg config.RouterConfig) chi.Router {
 	router.Use(middleware.Timeout(time.Duration(routercfg.Timeout)))
 
 	router.Use(middleware.RequestSize(routercfg.RequestSize))
+
+	router.Get("/health", func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("ok"))
+	})
+
+	router.Get("/media/users/{filename}", app.Cookie.ServeUserAvatar)
+	router.Get("/media/posts/{filename}", app.Cookie.ServePostImage)
 
 	// Api URLs
 

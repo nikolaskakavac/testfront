@@ -1,6 +1,8 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
+import { toBackendUrl } from "@/lib/backend-url";
+
 const POSTS_IMAGE_DIR = path.join(process.cwd(), "baza", "images", "posts");
 
 export async function ensurePostsImageDir() {
@@ -47,5 +49,5 @@ export function getPostImageUrl(imgPath?: string | null) {
     return null;
   }
 
-  return `/api/posts/image/${encodeURIComponent(fileName)}`;
+  return toBackendUrl(`/media/posts/${encodeURIComponent(fileName)}`);
 }

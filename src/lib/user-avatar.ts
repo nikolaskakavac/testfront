@@ -1,5 +1,7 @@
 import path from "node:path";
 
+import { toBackendUrl } from "@/lib/backend-url";
+
 const USERS_IMAGE_DIR = path.join(process.cwd(), "baza", "images", "users");
 
 export function getAvatarFilePath(fileName: string) {
@@ -38,5 +40,5 @@ export function getAvatarUrl(imgUrl?: string | null) {
     return null;
   }
 
-  return `/api/users/avatar/${encodeURIComponent(fileName)}`;
+  return toBackendUrl(`/media/users/${encodeURIComponent(fileName)}`);
 }
