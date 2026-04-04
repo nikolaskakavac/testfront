@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Image from "next/image";
 import { cookies } from "next/headers";
 
@@ -183,7 +184,9 @@ export default async function HomePage() {
                 <h2 className="text-xl font-bold text-[color:var(--text-strong)]">Home</h2>
               </div>
 
-              <CreatePostPanel />
+              <Suspense fallback={null}>
+                <CreatePostPanel />
+              </Suspense>
 
               <div className="grid grid-cols-1 gap-4">
                 {posts.map((post) => (

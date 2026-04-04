@@ -42,6 +42,13 @@ type FollowListUser = {
   avatarUrl?: string;
 };
 
+type FollowListPayloadUser = {
+  id: string;
+  username: string;
+  avatarUrl?: string | null;
+  avatar_url?: string | null;
+};
+
 async function getBackendCookieHeader() {
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get("session_token")?.value;
@@ -72,7 +79,7 @@ async function loadFollowList(userId: string, type: "followers" | "following"): 
     }
 
     const data = await response.json();
-    const users = Array.isArray(data?.users) ? data.users : [];
+    const users = (Array.isArray(data?.users) ? data.users : []) as FollowListPayloadUser[];
 
     return users.map((user) => ({
       id: user.id,
