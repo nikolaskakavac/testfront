@@ -76,14 +76,22 @@ export default function CreatePostPanel() {
         body: formData,
       });
 
-      const data = (await response.json().catch(() => ({}))) as { message?: string };
+      const rawText = await response.text();
+      let parsedMessage = "";
+
+      try {
+        const data = JSON.parse(rawText) as { message?: string };
+        parsedMessage = data.message ?? "";
+      } catch {
+        parsedMessage = rawText.trim();
+      }
 
       if (!response.ok) {
-        setError(data.message || "Create post failed.");
+        setError(parsedMessage || "Create post failed.");
         return;
       }
 
-      setMessage(data.message || "Post created.");
+      setMessage(parsedMessage || "Post created.");
       setForm(initialState);
       setFiles(null);
       if (fileInputRef.current) {

@@ -3,7 +3,7 @@
 
         "timeout": "5s",
 
-        "requestSize": 1048576
+        "requestSize": 10485760
     },
 
     "cookie": {
