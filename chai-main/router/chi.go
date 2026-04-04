@@ -51,6 +51,7 @@ func (app *App) NewChiRouter(routercfg config.RouterConfig) chi.Router {
 		r.Post("/users/{userID}/follow", app.Cookie.CreateFollow)
 		r.Delete("/users/{userID}/follow", app.Cookie.DeleteFollow)
 		r.Get("/users/by-username/{username}", app.Cookie.GetUserByUsername)
+		r.Patch("/profile", app.Cookie.UpdateProfile)
 		r.Patch("/profile/avatar", app.Cookie.UpdateProfileAvatar)
 		r.Delete("/profile/avatar", app.Cookie.DeleteProfileAvatar)
 

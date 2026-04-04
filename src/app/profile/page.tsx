@@ -6,12 +6,11 @@ import SideNav from "@/components/layout/side-nav";
 import Topbar from "@/components/layout/topbar";
 import { getAuthSession } from "@/lib/auth-session";
 import AvatarUploadForm from "@/components/profile/avatar-upload-form";
+import EditProfileForm from "@/components/profile/edit-profile-form";
 import ProfilePostsGrid from "@/components/profile/profile-posts-grid";
 import Avatar from "@/components/user/avatar";
 import { getAvatarUrl } from "@/lib/user-avatar";
 import { mapBackendPosts, type BackendPost } from "@/lib/post-feed";
-
-const favoriteCategories = ["Sneakers", "Setups", "Streetwear", "Photography"];
 
 const BACKEND_API_BASE_URL =
   process.env.BACKEND_API_BASE_URL ||
@@ -157,28 +156,40 @@ export default async function ProfilePage() {
 
       <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-4 py-6 md:ml-56 md:grid-cols-[minmax(0,1fr)_320px]">
         <section className="space-y-6">
-          <div className="overflow-hidden rounded-[36px] border border-[color:var(--line)] bg-[var(--hero-bg)] shadow-[var(--shadow-soft)] backdrop-blur-xl">
-            <div className="grid gap-6 p-6 sm:p-8 lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:items-center">
-              <div className="flex items-center gap-4">
-                <Avatar username={username} avatarUrl={avatarUrl} size={96} priority />
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.28em] text-orange-300/90">
-                    Your profile
-                  </p>
-                  <h1 className="mt-2 text-3xl font-black tracking-tight text-[color:var(--text-strong)] sm:text-4xl">
-                    {profileHandle}
-                  </h1>
-                  <p className="mt-2 max-w-xl text-sm leading-6 text-[color:var(--muted)]">
-                    Logged in as {email}. This page is your taste dashboard, profile hub, and shortcut to everything you save or post.
-                  </p>
+          <div className="relative overflow-hidden rounded-[36px] border border-[color:var(--line)] bg-[var(--hero-bg)] shadow-[var(--shadow-soft)] backdrop-blur-xl">
+            <div className="grid gap-6 p-6 sm:p-8">
+              <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
+                <div className="flex items-center gap-4">
+                  <Avatar username={username} avatarUrl={avatarUrl} size={96} priority />
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.28em] text-orange-300/90">
+                      Your profile
+                    </p>
+                    <h1 className="mt-2 text-3xl font-black tracking-tight text-[color:var(--text-strong)] sm:text-4xl">
+                      {profileHandle}
+                    </h1>
+                    <p className="mt-2 max-w-xl text-sm leading-6 text-[color:var(--muted)]">
+                      Logged in as {email}. This page is your taste dashboard, profile hub, and shortcut to everything you save or post.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-stretch gap-3 xl:justify-end">
+                  <div className="min-w-[120px] rounded-2xl border border-[color:var(--line)] bg-[var(--surface)] px-4 py-4 text-center shadow-[var(--shadow-card)]">
+                    <p className="text-[11px] uppercase tracking-[0.16em] text-[color:var(--muted)]">Followers</p>
+                    <p className="mt-2 text-2xl font-black text-[color:var(--text-strong)]">{session.followers}</p>
+                  </div>
+                  <div className="min-w-[120px] rounded-2xl border border-[color:var(--line)] bg-[var(--surface)] px-4 py-4 text-center shadow-[var(--shadow-card)]">
+                    <p className="text-[11px] uppercase tracking-[0.16em] text-[color:var(--muted)]">Following</p>
+                    <p className="mt-2 text-2xl font-black text-[color:var(--text-strong)]">{session.followings}</p>
+                  </div>
+                  <EditProfileForm initialUsername={username} initialEmail={email} />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:min-w-[320px]">
-                {[ 
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-3">
+                {[
                   { label: "Posts", value: String(profilePosts.length) },
-                  { label: "Followers", value: String(session.followers) },
-                  { label: "Following", value: String(session.followings) },
                   { label: "Ratings", value: String(ratingsCount) },
                   { label: "Favorites", value: String(favoritesCount) },
                 ].map((item) => (
@@ -229,48 +240,13 @@ export default async function ProfilePage() {
               </div>
             </div>
 
-            <div className="space-y-6">
-              <div className="rounded-[32px] border border-[color:var(--line)] bg-[var(--surface)] p-6 shadow-[var(--shadow-card)]">
-                <p className="text-sm font-semibold text-[color:var(--muted)]">Identity</p>
-                <div className="mt-4 space-y-4 text-sm text-[color:var(--muted)]">
-                  <AvatarUploadForm />
-                  <div className="rounded-2xl border border-[color:var(--line)] bg-[var(--subtle-bg)] px-4 py-4">
-                    <p className="text-[11px] uppercase tracking-[0.18em] text-orange-300/90">Role</p>
-                    <p className="mt-2 text-base font-semibold text-[color:var(--text-strong)]">Curator / Rater</p>
-                  </div>
-                  <div className="rounded-2xl border border-[color:var(--line)] bg-[var(--subtle-bg)] px-4 py-4">
-                    <p className="text-[11px] uppercase tracking-[0.18em] text-orange-300/90">Best at</p>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {favoriteCategories.map((category) => (
-                        <span
-                          key={category}
-                          className="rounded-full border border-[color:var(--line)] bg-[var(--subtle-bg-2)] px-3 py-2 text-xs text-[color:var(--text-strong)]"
-                        >
-                          {category}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-[32px] border border-[color:var(--line)] bg-[var(--surface)] p-6 shadow-[var(--shadow-card)]">
-                <p className="text-sm font-semibold text-[color:var(--muted)]">Account snapshot</p>
-                <div className="mt-4 space-y-3">
-                  {[
-                    { label: "Profile completion", value: "86%" },
-                    { label: "Followers", value: `${session.followers} users` },
-                    { label: "Saved favorites", value: `${favoritesCount} posts` },
-                  ].map((item) => (
-                    <div
-                      key={item.label}
-                      className="flex items-center justify-between rounded-2xl border border-[color:var(--line)] bg-[var(--subtle-bg)] px-4 py-4 text-sm"
-                    >
-                      <span className="text-[color:var(--muted)]">{item.label}</span>
-                      <span className="font-semibold text-[color:var(--text-strong)]">{item.value}</span>
-                    </div>
-                  ))}
-                </div>
+            <div className="rounded-[32px] border border-[color:var(--line)] bg-[var(--surface)] p-6 shadow-[var(--shadow-card)]">
+              <p className="text-sm font-semibold text-[color:var(--muted)]">Profile photo</p>
+              <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">
+                Update your avatar here. If you skip it, the default user icon stays in place.
+              </p>
+              <div className="mt-5">
+                <AvatarUploadForm />
               </div>
             </div>
           </div>
@@ -353,24 +329,12 @@ export default async function ProfilePage() {
             <div className="rounded-[32px] border border-[color:var(--line)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
               <p className="text-sm font-semibold text-[color:var(--muted)]">Profile actions</p>
               <div className="mt-4 space-y-3">
-                <button className="motion-button button-primary w-full justify-center">Edit profile</button>
                 <Link href="/likes" className="motion-button button-secondary w-full justify-center">
                   View favorites
                 </Link>
                 <Link href="/" className="motion-button button-quiet w-full justify-center">
                   Back to feed
                 </Link>
-              </div>
-            </div>
-
-            <div className="rounded-[32px] border border-[color:var(--line)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
-              <p className="text-sm font-semibold text-[color:var(--muted)]">Why this page matters</p>
-              <p className="mt-3 text-sm leading-6 text-[color:var(--muted)]">
-                rateR profiles should feel like a blend of creator page and taste dashboard, not a generic social bio.
-              </p>
-              <div className="mt-4 rounded-2xl border border-[color:var(--line)] bg-[var(--subtle-bg)] px-4 py-4">
-                <p className="text-[11px] uppercase tracking-[0.18em] text-orange-300/90">Signed in as</p>
-                <p className="mt-2 text-sm font-semibold text-[color:var(--text-strong)]">{profileHandle}</p>
               </div>
             </div>
           </div>
