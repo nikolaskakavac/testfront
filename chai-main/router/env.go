@@ -8,6 +8,10 @@ import (
 )
 
 func LoadEnv(envfile string) error {
+	if _, err := os.Stat(envfile); os.IsNotExist(err) {
+		// In hosted environments like Render, env vars are usually injected directly.
+		return nil
+	}
 
 	err := godotenv.Load(envfile)
 
