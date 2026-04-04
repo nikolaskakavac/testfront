@@ -70,8 +70,8 @@ export default function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-[color:var(--line)] bg-[var(--header-bg)] px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 backdrop-blur-xl md:hidden">
-      <div className="mx-auto grid max-w-md grid-cols-5 gap-2 rounded-[28px] border border-[color:var(--line)] bg-[var(--surface)] p-2 shadow-[var(--shadow-card)]">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-[color:var(--line)] bg-[var(--header-bg)] px-3 pb-[max(env(safe-area-inset-bottom),0.35rem)] pt-1.5 backdrop-blur-xl md:hidden">
+      <div className="mx-auto grid max-w-md grid-cols-5 gap-2 rounded-[22px] border border-[color:var(--line)] bg-[var(--surface)] p-2 shadow-[var(--shadow-card)]">
         {items.map((item) => {
           const isActive = item.activeWhen?.includes(pathname) ?? false;
 
